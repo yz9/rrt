@@ -207,35 +207,11 @@ def obstacle_free_path(e1, e2):
     return collide
 
 def increment_small_step(p1, p2):
-    distance = math.sqrt((p1[0]-p2[0])*(p1[0]-p2[0])+(p1[1]-p2[1])*(p1[1]-p2[1]))
+    #distance = math.sqrt((p1[0]-p2[0])*(p1[0]-p2[0])+(p1[1]-p2[1])*(p1[1]-p2[1]))
     degree = math.atan2(p2[1] - p1[1], p2[0] - p1[0]) #atan2(y,x)
-    #round(degree)
-    #print(degree)
-    increment_amount = round(distance - SMALLSTEP, 1)
-    #print(increment_amount)
-    if increment_amount < 0:
-        print("less than smallstep")
-        new_point = [p2[0] + abs(increment_amount) * math.cos(degree), p2[1] + abs(increment_amount) * math.sin(degree)]
-        new_point = [round(x) for x in new_point]
-        print(new_point)
-        return new_point
-    else:
-        new_point = [p1[0] + SMALLSTEP * math.cos(degree), p1[1] + SMALLSTEP * math.sin(degree)]
-        new_point = [round(x) for x in new_point]
-        return new_point
-
-def rrt_init(G):
-    #print "buildin rrt tree"
-    #get a random obstacle free point
-    q_rand = genPoint()
-    #print("new_point is", new_point)
-    nearest_node = closestPointToPoint(G, q_rand)
-    nearest_point = vertices[nearest_node]
-    #print("nearest_point is ", nearest_point)
-    #check if path is obstacle free - collision
-    #add new_point to vertices
-    new_point = increment_small_step(nearest_point, q_rand)
-    return [nearest_point, nearest_node, new_point]
+    new_point = [p1[0] + SMALLSTEP * math.cos(degree), p1[1] + SMALLSTEP * math.sin(degree)]
+    new_point = [round(x) for x in new_point]
+    return new_point
 
 #TODO: Implement the rrt_search algorithm in this function.
 def rrt_search(G, tx, ty):
@@ -247,22 +223,26 @@ def rrt_search(G, tx, ty):
     #while not reach the destination point
     goal_reached = [tx, ty] in vertices
     if goal_reached == False:
-        [nearest_point, nearest_node, new_point] = rrt_init(G)
-        collide = obstacle_free_point(new_point)
-        #check if new_point is obstacle free pt
-        while collide == 1:
-            [nearest_point, nearest_node, new_point] = rrt_init(G)
-            collide = obstacle_free_point(new_point)
+        #print "buildin rrt tree"
+        #get a random obstacle free point
+        q_rand = genPoint()
+        #print("new_point is", new_point)
+        nearest_node = closestPointToPoint(G, q_rand)
+        nearest_point = vertices[nearest_node]
+        #print("nearest_point is ", nearest_point)
+        #check if path is obstacle free - collision
+        #add new_point to vertices
+        new_point = increment_small_step(nearest_point, q_rand)
 
-        pointToVertex(new_point)
-        #convert points to nodes
-        #print(vertices)
-        new_node = vertices.index(new_point)
-        #update G
-        G[nodes].append(new_node)
-        #print(G[nodes])
-        #print "not collide"
         if obstacle_free_path(nearest_point, new_point) == 0:
+            pointToVertex(new_point)
+            #convert points to nodes
+            #print(vertices)
+            new_node = vertices.index(new_point)
+            #update G
+            G[nodes].append(new_node)
+            #print(G[nodes])
+            #print "not collide"
             G[edges].append((nearest_node, new_node))
             redraw()
     else:
