@@ -21,7 +21,10 @@ XMAX = s[0]
 YMAX = s[1]
 
 # goal/target
-tx = 900
+#tx = 900
+#ty = 300
+
+tx = 300
 ty = 300
 # start
 start_x = 10
@@ -36,7 +39,7 @@ nodes=0
 edges=1
 maxvertex = 0
 
-boundary_value = 10
+boundary_value = 30
 
 def drawGraph(G):
     global vertices,nodes,edges
@@ -217,7 +220,9 @@ def increment_small_step(p1, p2):
 #TODO: Implement the rrt_search algorithm in this function.
 def dest_region(p):
     #p = [round(x) for x in p]
+    print(p[0], p[1])
     if (p[0] - tx)**2 + (p[1] - ty)**2 <= boundary_value**2:
+        print(p[0], p[1])
         return True
     return False
 
@@ -233,10 +238,9 @@ def rrt_search(G, tx, ty):
     # You should call genPoint() within this function to
     #get samples from different distributions.
     canvas.events()
-
     #define destination region
     goal_reached = inside_dest_region()
-    print(goal_reached)
+    #print(goal_reached)
     #goal_reached = [tx, ty] in vertices
     if goal_reached == False:
         #print "buildin rrt tree"
@@ -260,9 +264,15 @@ def rrt_search(G, tx, ty):
             #print(G[nodes])
             #print "not collide"
             G[edges].append((nearest_node, new_node))
-            redraw()
+            #print(returnParent(new_node))
+            #redraw()
     else:
         print("Goal Reached")
+        #path finding
+        node  = G[nodes][-1]
+        while node != 0:
+            node = returnParent(node)
+
     return G
 
     #expand until reaches tx ty
