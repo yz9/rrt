@@ -36,6 +36,8 @@ nodes=0
 edges=1
 maxvertex = 0
 
+boundary_value = 10
+
 def drawGraph(G):
     global vertices,nodes,edges
     if not visualize: return
@@ -199,12 +201,11 @@ def inRect(p,rect,dilation):
 #two points
 def obstacle_free_path(e1, e2):
     #return 1 if intersect, return 0 if no collision
-    collide = -1
     for o in obstacles:
         collide = lineHitsRect(e1, e2, o)
         if collide == 1:
             return collide
-    return collide
+    return 0
 
 def increment_small_step(p1, p2):
     #distance = math.sqrt((p1[0]-p2[0])*(p1[0]-p2[0])+(p1[1]-p2[1])*(p1[1]-p2[1]))
@@ -214,14 +215,29 @@ def increment_small_step(p1, p2):
     return new_point
 
 #TODO: Implement the rrt_search algorithm in this function.
+def dest_region(p):
+    #p = [round(x) for x in p]
+    if (p[0] - tx)**2 + (p[1] - ty)**2 <= boundary_value**2:
+        return True
+    return False
+
+def inside_dest_region():
+    for p in vertices:
+        inside = dest_region(p)
+        if inside == True:
+            return True
+    return False
+
 def rrt_search(G, tx, ty):
     # Implement the rrt_algorithm in this section of the code.
     # You should call genPoint() within this function to
     #get samples from different distributions.
     canvas.events()
 
-    #while not reach the destination point
-    goal_reached = [tx, ty] in vertices
+    #define destination region
+    goal_reached = inside_dest_region()
+    print(goal_reached)
+    #goal_reached = [tx, ty] in vertices
     if goal_reached == False:
         #print "buildin rrt tree"
         #get a random obstacle free point
