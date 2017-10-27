@@ -21,11 +21,11 @@ XMAX = s[0]
 YMAX = s[1]
 
 # goal/target
-#tx = 900
-#ty = 300
-
-tx = 300
+tx = 900
 ty = 300
+
+#tx = 300
+#ty = 300
 # start
 start_x = 10
 start_y = 270
@@ -39,7 +39,8 @@ nodes=0
 edges=1
 maxvertex = 0
 
-boundary_value = 30
+#myVariables
+boundary_value = 20
 
 def drawGraph(G):
     global vertices,nodes,edges
@@ -64,8 +65,8 @@ def genPoint():
         collide = obstacle_free_point([uniform_x, uniform_y])
     """
     [gauss_x, gauss_y] = gaussPoint()
-    [x, y] = [uniform_x, uniform_y]
-    #[x, y] = [gauss_x, gauss_y]
+    #[x, y] = [uniform_x, uniform_y]
+    [x, y] = [gauss_x, gauss_y]
     #print (x, y)
     return [x, y]
 
@@ -214,7 +215,7 @@ def increment_small_step(p1, p2):
     #distance = math.sqrt((p1[0]-p2[0])*(p1[0]-p2[0])+(p1[1]-p2[1])*(p1[1]-p2[1]))
     degree = math.atan2(p2[1] - p1[1], p2[0] - p1[0]) #atan2(y,x)
     new_point = [p1[0] + SMALLSTEP * math.cos(degree), p1[1] + SMALLSTEP * math.sin(degree)]
-    new_point = [round(x) for x in new_point]
+    #new_point = [round(x) for x in new_point]
     return new_point
 
 #TODO: Implement the rrt_search algorithm in this function.
@@ -233,6 +234,11 @@ def inside_dest_region():
             return True
     return False
 
+num_rrt_iterations = 0
+def rrt_iteration_count():
+    global num_rrt_iterations
+    num_rrt_iterations += 1
+
 def rrt_search(G, tx, ty):
     # Implement the rrt_algorithm in this section of the code.
     # You should call genPoint() within this function to
@@ -243,6 +249,8 @@ def rrt_search(G, tx, ty):
     #print(goal_reached)
     #goal_reached = [tx, ty] in vertices
     if goal_reached == False:
+        rrt_iteration_count()
+
         #print "buildin rrt tree"
         #get a random obstacle free point
         q_rand = genPoint()
@@ -270,9 +278,12 @@ def rrt_search(G, tx, ty):
         print("Goal Reached")
         #path finding
         node  = G[nodes][-1]
+        rrt_path_length = 0;
         while node != 0:
+            rrt_path_length += 1
             node = returnParent(node)
-
+        print("rrt path length", rrt_path_length)
+        print("num_rrt_iterations",num_rrt_iterations)
     return G
 
     #expand until reaches tx ty
