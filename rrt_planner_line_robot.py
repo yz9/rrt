@@ -10,7 +10,7 @@ import imageToRects
 
 visualize = 1
 prompt_before_next=1  # ask before re-running sonce solved
-SMALLSTEP = 10 # what our "local planner" can handle.
+SMALLSTEP = 20 # what our "local planner" can handle.
 
 XMAX=1800
 YMAX=1000
@@ -19,7 +19,7 @@ s,obstacles = imageToRects.imageToRects(sys.argv[1])
 
 XMAX = s[0]
 YMAX = s[1]
-"""
+
 # goal/target
 tx = 800
 ty = 150
@@ -29,6 +29,7 @@ tz = 0 #theta
 tx = 260
 ty = 400
 tz = 0
+"""
 # start
 start_x = 100
 start_y = 630
@@ -66,8 +67,8 @@ def gaussPoint():
     gauss_x = random.gauss(tx, sigmax_for_randgen)
     gauss_y = random.gauss(ty, sigmay_for_randgen)
     gauss_z = random.gauss(tz, sigmaz_for_randgen )
-    #if gauss_x < 0 or gauss_y < 0 or gauss_x > XMAX or gauss_y > YMAX or gauss_z < 0 or gauss_z > 360:
-    #    [gauss_x, gauss_y, gauss_z] = gaussPoint()
+    if gauss_x < 0 or gauss_y < 0 or gauss_x > XMAX or gauss_y > YMAX:
+        [gauss_x, gauss_y, gauss_z] = gaussPoint()
     return [gauss_x, gauss_y, gauss_z]
 
 def genvertex():
@@ -131,7 +132,7 @@ def returnParent(k):
 
             #line1 = [p1[0] + line_robot_length * math.cos(p1[2]), p1[1] + line_robot_length * math.sin(p1[2]) ]
             #line2 = [p2[0] + line_robot_length * math.cos(p2[2]), p2[1] + line_robot_length * math.sin(p2[2]) ]
-            canvas.polyline(  [p1, p2], style=4)
+            canvas.polyline(  [p1, p2], style=2)
             return e[0]
 
 def pickGvertex():
@@ -239,7 +240,7 @@ def rrt_search(G, tx, ty, tz):
     #goal_reached = [tx, ty] in vertices
     if goal_reached == False:
         rrt_iteration_count()
-
+        print("num_rrt_iterations", num_rrt_iterations)
         #print "buildin rrt tree"
         #get a random obstacle free point
         q_rand = genPoint()
@@ -257,10 +258,13 @@ def rrt_search(G, tx, ty, tz):
         if obstacle_free_rotation(new_point) == 1:
             return
 
-        if obstacle_free_path(nearest_point, new_point) == 0: #obstacle free
+
+
+        if obstacle_free_path(nearest_point, new_point) == 0 : #obstacle free
             pointToVertex(new_point)
             #convert points to nodes
             #print(vertices)
+            print(new_point)
             new_node = vertices.index(new_point)
             #update G
             G[nodes].append(new_node)
@@ -275,7 +279,7 @@ def rrt_search(G, tx, ty, tz):
         node  = G[nodes][-1]
         #rrt_path_length = 0;
         while node != 0:
-            rrt_path_length += 1
+            #rrt_path_length += 1
             node = returnParent(node)
         #print("rrt path length", rrt_path_length)
         print("num_rrt_iterations",num_rrt_iterations)
