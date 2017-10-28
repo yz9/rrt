@@ -10,7 +10,7 @@ import imageToRects
 
 visualize = 1
 prompt_before_next=1  # ask before re-running sonce solved
-SMALLSTEP = 50 # what our "local planner" can handle.
+SMALLSTEP = 10 # what our "local planner" can handle.
 
 XMAX=1800
 YMAX=1000
@@ -19,28 +19,34 @@ s,obstacles = imageToRects.imageToRects(sys.argv[1])
 
 XMAX = s[0]
 YMAX = s[1]
-
+"""
 # goal/target
-tx = 900
-ty = 300
-
-#tx = 300
-#ty = 300
+tx = 800
+ty = 150
+tz = 0 #theta
+"""
+#sample
+tx = 260
+ty = 400
+tz = 0
 # start
-start_x = 10
-start_y = 270
+start_x = 100
+start_y = 630
+start_z = 0
 
-vertices = [ [start_x,start_y] ]
+vertices = [ [start_x,start_y,start_z] ]
 
 sigmax_for_randgen = XMAX/2.0
 sigmay_for_randgen = YMAX/2.0
+sigmaz_for_randgen = 360 / 2.0 # 2pi/2
 
 nodes=0
 edges=1
 maxvertex = 0
 
+line_robot_length = 50
 #myVariables
-boundary_value = 5
+boundary_value = 20
 
 def drawGraph(G):
     global vertices,nodes,edges
@@ -52,33 +58,17 @@ def drawGraph(G):
 
 def genPoint():
     # Function to implement the sampling technique
-    # Uniform distribution
-    #       OR
     # Gaussian distribution with mean at the goal
-    [x, y] = gaussPoint()
-    #[x, y] = uniformPoint()
-    return [x, y]
-
-def obstacle_free_point(p1):
-    #return 1 if collide, 0 if no collision
-    for o in obstacles:
-        #TODO value for dilation
-        collide = inRect(p1, o, 1)
-        if collide == 1:
-            return 1
-    return 0
-
-def uniformPoint():
-    uniform_x = random.uniform(0, XMAX)
-    uniform_y = random.uniform(0, YMAX)
-    return [uniform_x, uniform_y]
+    [x, y, z] = gaussPoint()
+    return [x, y, z]
 
 def gaussPoint():
     gauss_x = random.gauss(tx, sigmax_for_randgen)
     gauss_y = random.gauss(ty, sigmay_for_randgen)
-    if gauss_x < 0 or gauss_y < 0 or gauss_x > XMAX or gauss_y > YMAX:
-        [gauss_x, gauss_y] = gaussPoint()
-    return [gauss_x, gauss_y]
+    gauss_z = random.gauss(tz, sigmaz_for_randgen )
+    #if gauss_x < 0 or gauss_y < 0 or gauss_x > XMAX or gauss_y > YMAX or gauss_z < 0 or gauss_z > 360:
+    #    [gauss_x, gauss_y, gauss_z] = gaussPoint()
+    return [gauss_x, gauss_y, gauss_z]
 
 def genvertex():
     vertices.append( genPoint() )
@@ -135,6 +125,13 @@ def returnParent(k):
     for e in G[edges]:
         if e[1]==k:
             canvas.polyline(  [vertices[e[0]], vertices[e[1]] ], style=3  )
+            p = vertices[e[0]]
+            p1 = [p[0] - line_robot_length / 2 * math.cos(p[2]), p[1] - line_robot_length / 2 * math.sin(p[2]) ]
+            p2 = [p[0] + line_robot_length / 2 * math.cos(p[2]), p[1] + line_robot_length / 2 * math.sin(p[2]) ]
+
+            #line1 = [p1[0] + line_robot_length * math.cos(p1[2]), p1[1] + line_robot_length * math.sin(p1[2]) ]
+            #line2 = [p2[0] + line_robot_length * math.cos(p2[2]), p2[1] + line_robot_length * math.sin(p2[2]) ]
+            canvas.polyline(  [p1, p2], style=4)
             return e[0]
 
 def pickGvertex():
@@ -192,22 +189,32 @@ def inRect(p,rect,dilation):
    return 1
 
 #two points
-def obstacle_free_path(e1, e2):
+def obstacle_free_path(p1, p2):
     #return 1 if intersect, return 0 if no collision
     for o in obstacles:
-        collide = lineHitsRect(e1, e2, o)
-        if collide == 1:
-            return collide
+        edge_collide = lineHitsRect(p1, p2, o)
+        if edge_collide == 1:
+            return 1
+    return 0
+
+def obstacle_free_rotation(p):
+    #return 1 if collide, 0 if no collision
+    degree = p[2]
+    for o in obstacles:
+        p1 = [p[0] - line_robot_length / 2 * math.cos(degree), p[1] - line_robot_length / 2 * math.sin(degree) ]
+        p2 = [p[0] + line_robot_length / 2 * math.cos(degree), p[1] + line_robot_length / 2 * math.sin(degree) ]
+        robot_collide = lineHitsRect(p1, p2, o)
+        if robot_collide == 1:
+            return 1
     return 0
 
 def increment_small_step(p1, p2):
     #distance = math.sqrt((p1[0]-p2[0])*(p1[0]-p2[0])+(p1[1]-p2[1])*(p1[1]-p2[1]))
     degree = math.atan2(p2[1] - p1[1], p2[0] - p1[0]) #atan2(y,x)
-    new_point = [p1[0] + SMALLSTEP * math.cos(degree), p1[1] + SMALLSTEP * math.sin(degree)]
+    new_point = [p1[0] + SMALLSTEP * math.cos(degree), p1[1] + SMALLSTEP * math.sin(degree), p2[2]]
     #new_point = [round(x) for x in new_point]
     return new_point
 
-#define destination region 
 def dest_region(p):
     #p = [round(x) for x in p]
     #print(p[0], p[1])
@@ -215,25 +222,18 @@ def dest_region(p):
         #print(p[0], p[1])
         return True
     return False
-"""
-def inside_dest_region():
-    for p in vertices:
-        inside = dest_region(p)
-        if inside == True:
-            return True
-    return False
-"""
+
 num_rrt_iterations = 0
 def rrt_iteration_count():
     global num_rrt_iterations
     num_rrt_iterations += 1
 
-def rrt_search(G, tx, ty):
+def rrt_search(G, tx, ty, tz):
     # Implement the rrt_algorithm in this section of the code.
     # You should call genPoint() within this function to
     #get samples from different distributions.
     canvas.events()
-    #check if the newest point in vertices is in the destination region
+    #define destination region
     goal_reached = dest_region(vertices[-1])
     #print(goal_reached)
     #goal_reached = [tx, ty] in vertices
@@ -245,13 +245,19 @@ def rrt_search(G, tx, ty):
         q_rand = genPoint()
         #print("new_point is", new_point)
         nearest_node = closestPointToPoint(G, q_rand)
+
         nearest_point = vertices[nearest_node]
+
         #print("nearest_point is ", nearest_point)
         #check if path is obstacle free - collision
         #add new_point to vertices
         new_point = increment_small_step(nearest_point, q_rand)
 
-        if obstacle_free_path(nearest_point, new_point) == 0:
+        #check if the line robot hits the obstacle:
+        if obstacle_free_rotation(new_point) == 1:
+            return
+
+        if obstacle_free_path(nearest_point, new_point) == 0: #obstacle free
             pointToVertex(new_point)
             #convert points to nodes
             #print(vertices)
@@ -267,11 +273,11 @@ def rrt_search(G, tx, ty):
         print("Goal Reached")
         #path finding
         node  = G[nodes][-1]
-        rrt_path_length = 0;
+        #rrt_path_length = 0;
         while node != 0:
             rrt_path_length += 1
             node = returnParent(node)
-        print("rrt path length", rrt_path_length)
+        #print("rrt path length", rrt_path_length)
         print("num_rrt_iterations",num_rrt_iterations)
     return G
 
@@ -339,9 +345,8 @@ maxvertex += 1
 #TODO :  delete this
 # graph G
 G = [  [ 0 ]  , [] ]   # nodes, edges
-vertices = [ [10,270], [20,280]   ]
+vertices = [ [100,630, 0], [120,640, 0]   ]
 redraw()
-
 G[edges].append( (0,1) )
 G[nodes].append(1)
 
@@ -360,7 +365,7 @@ while 1:
     if visualize: canvas.markit( tx, ty, r=SMALLSTEP )
     """
     drawGraph(G)
-    rrt_search(G, tx, ty)
+    rrt_search(G, tx, ty, tz)
 
 #canvas.showRect(rect,fill='red')
 
