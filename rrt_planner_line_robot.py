@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import time
 import random
 import drawSample
@@ -10,7 +11,7 @@ import imageToRects
 
 visualize = 1
 prompt_before_next=1  # ask before re-running sonce solved
-SMALLSTEP = 20 # what our "local planner" can handle.
+SMALLSTEP = 15 # what our "local planner" can handle.
 
 XMAX=1800
 YMAX=1000
@@ -47,7 +48,7 @@ maxvertex = 0
 
 line_robot_length = 50
 #myVariables
-boundary_value = 20
+boundary_value = 15
 
 def drawGraph(G):
     global vertices,nodes,edges
@@ -233,14 +234,14 @@ def rrt_search(G, tx, ty, tz):
     # Implement the rrt_algorithm in this section of the code.
     # You should call genPoint() within this function to
     #get samples from different distributions.
-    canvas.events()
+    #canvas.events()
     #define destination region
     goal_reached = dest_region(vertices[-1])
     #print(goal_reached)
     #goal_reached = [tx, ty] in vertices
     if goal_reached == False:
         rrt_iteration_count()
-        print("num_rrt_iterations", num_rrt_iterations)
+        #print("num_rrt_iterations", num_rrt_iterations)
         #print "buildin rrt tree"
         #get a random obstacle free point
         q_rand = genPoint()
@@ -264,7 +265,7 @@ def rrt_search(G, tx, ty, tz):
             pointToVertex(new_point)
             #convert points to nodes
             #print(vertices)
-            print(new_point)
+            #print(new_point)
             new_node = vertices.index(new_point)
             #update G
             G[nodes].append(new_node)

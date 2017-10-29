@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import time
 import random
 import drawSample
@@ -10,7 +11,7 @@ import imageToRects
 
 visualize = 1
 prompt_before_next=1  # ask before re-running sonce solved
-SMALLSTEP = 50 # what our "local planner" can handle.
+SMALLSTEP = 4 # what our "local planner" can handle.
 
 XMAX=1800
 YMAX=1000
@@ -207,7 +208,7 @@ def increment_small_step(p1, p2):
     #new_point = [round(x) for x in new_point]
     return new_point
 
-#define destination region 
+#define destination region
 def dest_region(p):
     #p = [round(x) for x in p]
     #print(p[0], p[1])
@@ -232,7 +233,7 @@ def rrt_search(G, tx, ty):
     # Implement the rrt_algorithm in this section of the code.
     # You should call genPoint() within this function to
     #get samples from different distributions.
-    canvas.events()
+    #canvas.events()
     #check if the newest point in vertices is in the destination region
     goal_reached = dest_region(vertices[-1])
     #print(goal_reached)
